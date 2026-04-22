@@ -5,6 +5,7 @@ import { SavedGameState } from '../gameState';
 import { MenuOption, createHomeMenuOptions, createLoadMenuOptions, formatMenuOptionText } from '../menuModel';
 import { getInitialSelectionIndex, moveSelection } from '../menuSelection';
 import { getSaveSlotSummaries, loadSaveSlot } from '../saveSlots';
+import { ScrollableMenuContent, MenuLayoutConfig } from '../menuLayout';
 
 export class MainMenu extends Scene
 {
@@ -15,11 +16,19 @@ export class MainMenu extends Scene
     optionTexts: GameObjects.Text[];
     currentView: 'home' | 'load';
     selectedIndex: number;
+    scrollableContent: ScrollableMenuContent;
 
     constructor ()
     {
         super('MainMenu');
         this.optionTexts = [];
+        this.currentView = 'home';
+        this.selectedIndex = 0;
+        this.scrollableContent = null!;
+    }
+
+    init ()
+    {
         this.currentView = 'home';
         this.selectedIndex = 0;
     }
@@ -44,6 +53,17 @@ export class MainMenu extends Scene
             color: '#d4e8ff',
             align: 'center'
         }).setOrigin(0.5).setDepth(100);
+
+        const layoutConfig: MenuLayoutConfig = {
+            panelX: 512,
+            panelY: 134,
+            panelWidth: 760,
+            panelHeight: 560,
+            headerHeight: 290,
+            footerHeight: 80,
+            rowHeight: 82
+        };
+        this.scrollableContent = new ScrollableMenuContent(layoutConfig);
 
         this.registerInput();
         this.refreshMenu();
@@ -73,7 +93,8 @@ export class MainMenu extends Scene
         }
 
         this.optionTexts = options.map((option, index) => {
-            const optionText = this.add.text(512, 485 + (index * 82), formatMenuOptionText(option), {
+            const yPos = this.scrollableContent.getVisibleYPosition(index);
+            const optionText = this.add.text(512, yPos, formatMenuOptionText(option), {
                 fontFamily: 'Arial',
                 fontSize: 26,
                 color: '#f8fbff',
@@ -115,7 +136,17 @@ export class MainMenu extends Scene
         const options = this.getCurrentOptions();
 
         this.selectedIndex = moveSelection(options, this.selectedIndex, direction);
+        this.scrollableContent.updateSelection(this.selectedIndex, options.length);
+        this.refreshMenuPositions();
         this.updateMenuStyles(options);
+    }
+
+    private refreshMenuPositions ()
+    {
+        this.optionTexts.forEach((optionText, index) => {
+            const yPos = this.scrollableContent.getVisibleYPosition(index);
+            optionText.setY(yPos);
+        });
     }
 
     startGame (saveState: SavedGameState | null = null)

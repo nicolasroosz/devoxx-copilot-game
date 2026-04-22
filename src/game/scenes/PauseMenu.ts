@@ -5,6 +5,7 @@ import { GameRunState, createSavedGameState } from '../gameState';
 import { MenuOption, createPauseMenuOptions, createSaveMenuOptions, formatMenuOptionText } from '../menuModel';
 import { getInitialSelectionIndex, moveSelection } from '../menuSelection';
 import { getSaveSlotSummaries, saveToSlot } from '../saveSlots';
+import { ScrollableMenuContent, MenuLayoutConfig } from '../menuLayout';
 
 interface PauseMenuData
 {
@@ -19,6 +20,7 @@ export class PauseMenu extends Scene
     currentView: 'root' | 'save';
     selectedIndex: number;
     currentRunState: GameRunState;
+    scrollableContent: ScrollableMenuContent;
 
     constructor ()
     {
@@ -32,6 +34,7 @@ export class PauseMenu extends Scene
             lastStepIndex: 0,
             ownedItemIds: []
         };
+        this.scrollableContent = null!;
     }
 
     init (data: PauseMenuData)
@@ -61,6 +64,17 @@ export class PauseMenu extends Scene
             align: 'center'
         }).setOrigin(0.5);
 
+        const layoutConfig: MenuLayoutConfig = {
+            panelX: 512,
+            panelY: 134,
+            panelWidth: 720,
+            panelHeight: 500,
+            headerHeight: 100,
+            footerHeight: 80,
+            rowHeight: 78
+        };
+        this.scrollableContent = new ScrollableMenuContent(layoutConfig);
+
         this.registerInput();
         this.refreshMenu();
 
@@ -88,13 +102,16 @@ export class PauseMenu extends Scene
             optionText.destroy();
         }
 
-        this.optionTexts = options.map((option, index) => this.add.text(512, 358 + (index * 78), formatMenuOptionText(option), {
-            fontFamily: 'Arial',
-            fontSize: 25,
-            color: '#f8fbff',
-            align: 'center',
-            lineSpacing: 10
-        }).setOrigin(0.5));
+        this.optionTexts = options.map((option, index) => {
+            const yPos = this.scrollableContent.getVisibleYPosition(index);
+            return this.add.text(512, yPos, formatMenuOptionText(option), {
+                fontFamily: 'Arial',
+                fontSize: 25,
+                color: '#f8fbff',
+                align: 'center',
+                lineSpacing: 10
+            }).setOrigin(0.5);
+        });
 
         this.updateMenuStyles(options);
     }
@@ -129,6 +146,7 @@ export class PauseMenu extends Scene
         const options = this.getCurrentOptions();
 
         this.selectedIndex = moveSelection(options, this.selectedIndex, direction);
+        this.scrollableContent.updateSelection(this.selectedIndex, options.length);
         this.updateMenuStyles(options);
     }
 

@@ -4,6 +4,7 @@ import { EventBus } from '../EventBus';
 import { GameRunState } from '../gameState';
 import { Category } from '../catalog';
 import { getMostExpensiveOwnedItem } from '../purchase';
+import { ScrollableMenuContent, MenuLayoutConfig } from '../menuLayout';
 
 interface InventoryMenuData
 {
@@ -32,6 +33,7 @@ export class InventoryMenu extends Scene
     slotTexts: GameObjects.Text[];
     selectedIndex: number;
     currentRunState: GameRunState;
+    scrollableContent: ScrollableMenuContent;
 
     constructor ()
     {
@@ -45,6 +47,7 @@ export class InventoryMenu extends Scene
             lastStepIndex: 0,
             ownedItemIds: []
         };
+        this.scrollableContent = null!;
     }
 
     init (data: InventoryMenuData)
@@ -72,6 +75,17 @@ export class InventoryMenu extends Scene
             color: '#d4e8ff',
             align: 'center'
         }).setOrigin(0.5);
+
+        const layoutConfig: MenuLayoutConfig = {
+            panelX: 512,
+            panelY: 134,
+            panelWidth: 720,
+            panelHeight: 500,
+            headerHeight: 100,
+            footerHeight: 80,
+            rowHeight: 100
+        };
+        this.scrollableContent = new ScrollableMenuContent(layoutConfig);
 
         this.buildSlots();
         this.renderSlots();

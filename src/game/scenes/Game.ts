@@ -109,7 +109,11 @@ export class Game extends Scene
 
         this.cursors = this.input.keyboard?.createCursorKeys();
         this.camera.startFollow(this.player, true, 0.08, 0.08);
-        this.input.keyboard?.on('keydown-ESC', () => this.openPauseMenu());
+        this.input.keyboard?.on('keydown-ESC', () => {
+            if (!this.shopActive && !this.inventoryActive) {
+                this.openPauseMenu();
+            }
+        });
         this.input.keyboard?.on('keydown-S', () => this.openShop());
         this.input.keyboard?.on('keydown-I', () => this.openInventory());
 
@@ -178,7 +182,7 @@ export class Game extends Scene
 
     openShop ()
     {
-        if (this.scene.isActive('ShopMenu') || this.scene.isPaused())
+        if (this.scene.isActive('ShopMenu') || this.scene.isPaused() || this.inventoryActive)
         {
             return;
         }
@@ -194,7 +198,7 @@ export class Game extends Scene
 
     openInventory ()
     {
-        if (this.scene.isActive('InventoryMenu') || this.scene.isPaused())
+        if (this.scene.isActive('InventoryMenu') || this.scene.isPaused() || this.shopActive)
         {
             return;
         }

@@ -3,6 +3,7 @@ import { EventBus } from '../EventBus';
 import { GameRunState } from '../gameState';
 import { Category } from '../catalog';
 import { getAvailableItems, purchaseItem } from '../purchase';
+import { ScrollableMenuContent, MenuLayoutConfig } from '../menuLayout';
 
 interface ShopMenuData {
   runState: GameRunState;
@@ -15,12 +16,15 @@ export class ShopMenu extends Scene {
   selectedItemIndex: number = 0;
   
   categoryTitleText: GameObjects.Text | null = null;
+  leftArrowText: GameObjects.Text | null = null;
+  rightArrowText: GameObjects.Text | null = null;
   itemTexts: GameObjects.Text[] = [];
   priceText: GameObjects.Text | null = null;
   affordabilityText: GameObjects.Text | null = null;
   placeholderRect: GameObjects.Rectangle | null = null;
   feedbackText: GameObjects.Text | null = null;
   footerText: GameObjects.Text | null = null;
+  scrollableContent: ScrollableMenuContent;
 
   constructor() {
     super('ShopMenu');
@@ -30,6 +34,7 @@ export class ShopMenu extends Scene {
       lastStepIndex: 0,
       ownedItemIds: []
     };
+    this.scrollableContent = null!;
   }
 
   init(data: ShopMenuData) {
@@ -51,6 +56,22 @@ export class ShopMenu extends Scene {
       strokeThickness: 8
     }).setOrigin(0.5);
 
+    this.leftArrowText = this.add.text(380, 220, '◄', {
+      fontFamily: 'Arial Black',
+      fontSize: 40,
+      color: '#4adfba',
+      stroke: '#09131f',
+      strokeThickness: 8
+    }).setOrigin(0.5);
+
+    this.rightArrowText = this.add.text(644, 220, '►', {
+      fontFamily: 'Arial Black',
+      fontSize: 40,
+      color: '#4adfba',
+      stroke: '#09131f',
+      strokeThickness: 8
+    }).setOrigin(0.5);
+
     this.footerText = this.add.text(512, 700, 'Left/Right: tabs | Up/Down: browse | Enter: buy | Esc: close', {
       fontFamily: 'Arial',
       fontSize: 14,
@@ -63,6 +84,17 @@ export class ShopMenu extends Scene {
       fontSize: 18,
       color: '#ffaaaa'
     }).setOrigin(0.5);
+
+    const layoutConfig: MenuLayoutConfig = {
+      panelX: 512,
+      panelY: 134,
+      panelWidth: 720,
+      panelHeight: 500,
+      headerHeight: 150,
+      footerHeight: 80,
+      rowHeight: 40
+    };
+    this.scrollableContent = new ScrollableMenuContent(layoutConfig);
 
     this.registerInput();
     this.refreshShop();
@@ -81,6 +113,9 @@ export class ShopMenu extends Scene {
 
     this.categoryTitleText?.setText(category.charAt(0).toUpperCase() + category.slice(1));
 
+    this.leftArrowText?.setText('◄');
+    this.rightArrowText?.setText('►');
+
     for (const text of this.itemTexts) {
       text.destroy();
     }
@@ -95,7 +130,7 @@ export class ShopMenu extends Scene {
       this.selectedItemIndex = 0;
     } else {
       items.forEach((item, index) => {
-        const yPos = 340 + index * 40;
+        const yPos = this.scrollableContent.getVisibleYPosition(index);
         const text = this.add.text(280, yPos, item.name, {
           fontFamily: 'Arial',
           fontSize: 18,
@@ -109,6 +144,7 @@ export class ShopMenu extends Scene {
       }
     }
 
+    this.scrollableContent.resetScroll();
     this.updateItemStyles();
     this.updateItemDetails();
   }
@@ -122,6 +158,13 @@ export class ShopMenu extends Scene {
         text.setColor('#f8fbff');
         text.setScale(1);
       }
+    });
+  }
+
+  private refreshItemPositions() {
+    this.itemTexts.forEach((text, index) => {
+      const yPos = this.scrollableContent.getVisibleYPosition(index);
+      text.setY(yPos);
     });
   }
 
@@ -201,6 +244,8 @@ export class ShopMenu extends Scene {
       this.selectedItemIndex = (this.selectedItemIndex + 1) % items.length;
     }
 
+    this.scrollableContent.updateSelection(this.selectedItemIndex, items.length);
+    this.refreshItemPositions();
     this.updateItemStyles();
     this.updateItemDetails();
   }
