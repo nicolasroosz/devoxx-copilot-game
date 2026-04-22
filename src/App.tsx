@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { APP_HELP_TEXT, APP_TITLE } from './appCopy';
 import { IRefPhaserGame, PhaserGame } from './PhaserGame';
 
 function App()
@@ -16,9 +17,9 @@ function App()
         <div id="app">
             <PhaserGame ref={phaserRef} currentActiveScene={currentScene} />
             <div className="sceneInfo">
-                <h1>Mario-like movement prototype</h1>
+                <h1>{APP_TITLE}</h1>
                 <p>Active scene: {sceneName}</p>
-                <p>Use the left and right arrow keys to move the character.</p>
+                <p>{APP_HELP_TEXT}</p>
             </div>
         </div>
     )

@@ -38,7 +38,6 @@ export class Preloader extends Scene
 
     create ()
     {
-        //  Skip the template menu and jump straight into the playable scene.
-        this.scene.start('Game');
+        this.scene.start('MainMenu');
     }
 }

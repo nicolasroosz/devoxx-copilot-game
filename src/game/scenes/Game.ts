@@ -1,5 +1,6 @@
 import { EventBus } from '../EventBus';
 import { GameObjects, Scene } from 'phaser';
+import { GameRunState, SavedGameState, hydrateRunState } from '../gameState';
 import { PlayerMovementInput, resolvePlayerMotion } from '../playerMovement';
 
 const WORLD_WIDTH = 4096;
@@ -11,6 +12,13 @@ const PLAYER_HEIGHT = 88;
 const PLAYER_START_X = 512;
 const PLAYER_SPEED = 260;
 const STEP_DISTANCE = 48;
+const MIN_PLAYER_X = 56;
+const MAX_PLAYER_X = WORLD_WIDTH - 56;
+
+interface GameSceneData
+{
+    saveState?: SavedGameState | null;
+}
 
 export class Game extends Scene
 {
@@ -24,6 +32,7 @@ export class Game extends Scene
     playerSpeed: number;
     stepCount: number;
     lastStepIndex: number;
+    saveState: SavedGameState | null;
 
     constructor ()
     {
@@ -31,6 +40,12 @@ export class Game extends Scene
         this.playerSpeed = PLAYER_SPEED;
         this.stepCount = 0;
         this.lastStepIndex = 0;
+        this.saveState = null;
+    }
+
+    init (data: GameSceneData)
+    {
+        this.saveState = data.saveState ?? null;
     }
 
     preload ()
@@ -55,11 +70,21 @@ export class Game extends Scene
         this.ground = this.add.tileSprite(WORLD_WIDTH / 2, FLOOR_TOP + FLOOR_HEIGHT / 2, WORLD_WIDTH, FLOOR_HEIGHT, 'dirt');
         this.ground.setDepth(5);
 
-        this.player = this.add.image(PLAYER_START_X, FLOOR_TOP - PLAYER_HEIGHT / 2, 'player');
+        const runState = hydrateRunState(this.saveState, {
+            defaultPlayerX: PLAYER_START_X,
+            minPlayerX: MIN_PLAYER_X,
+            maxPlayerX: MAX_PLAYER_X,
+            stepDistance: STEP_DISTANCE
+        });
+
+        this.player = this.add.image(runState.playerX, FLOOR_TOP - PLAYER_HEIGHT / 2, 'player');
         this.player.setDisplaySize(PLAYER_WIDTH, PLAYER_HEIGHT);
         this.player.setDepth(20);
 
-        this.stepCounterText = this.add.text(this.scale.width - 24, 24, 'Steps: 0', {
+        this.stepCount = runState.stepCount;
+        this.lastStepIndex = runState.lastStepIndex;
+
+        this.stepCounterText = this.add.text(this.scale.width - 24, 24, `Steps: ${this.stepCount}`, {
             fontFamily: 'Arial Black',
             fontSize: 28,
             color: '#f8fbff',
@@ -67,7 +92,7 @@ export class Game extends Scene
             strokeThickness: 6
         }).setOrigin(1, 0).setScrollFactor(0).setDepth(1000);
 
-        this.helperText = this.add.text(24, 24, '← → move', {
+        this.helperText = this.add.text(24, 24, 'Left/Right: move\nEsc: pause', {
             fontFamily: 'Arial',
             fontSize: 22,
             color: '#d7e7ff',
@@ -76,8 +101,8 @@ export class Game extends Scene
         }).setScrollFactor(0).setDepth(1000);
 
         this.cursors = this.input.keyboard?.createCursorKeys();
-        this.lastStepIndex = this.getStepIndex(this.player.x);
         this.camera.startFollow(this.player, true, 0.08, 0.08);
+        this.input.keyboard?.on('keydown-ESC', () => this.openPauseMenu());
 
         EventBus.emit('current-scene-ready', this);
     }
@@ -89,8 +114,8 @@ export class Game extends Scene
             rightPressed: this.cursors?.right?.isDown ?? false,
             speed: this.playerSpeed,
             deltaMs: delta,
-            minX: 56,
-            maxX: WORLD_WIDTH - 56
+            minX: MIN_PLAYER_X,
+            maxX: MAX_PLAYER_X
         };
 
         const motion = resolvePlayerMotion(this.player.x, movementInput);
@@ -107,6 +132,26 @@ export class Game extends Scene
             this.lastStepIndex = currentStepIndex;
             this.stepCounterText.setText(`Steps: ${this.stepCount}`);
         }
+    }
+
+    getRunState (): GameRunState
+    {
+        return {
+            playerX: this.player.x,
+            stepCount: this.stepCount,
+            lastStepIndex: this.lastStepIndex
+        };
+    }
+
+    openPauseMenu ()
+    {
+        if (this.scene.isActive('PauseMenu'))
+        {
+            return;
+        }
+
+        this.scene.launch('PauseMenu', { runState: this.getRunState() });
+        this.scene.pause();
     }
 
     changeScene ()
