@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title desc">
+  <title id="title">Player sprite</title>
+  <desc id="desc">A simple retro-style character sprite for the movement prototype.</desc>
+  <rect width="64" height="64" rx="14" fill="none"/>
+  <circle cx="32" cy="18" r="10" fill="#ffd9b3"/>
+  <rect x="22" y="26" width="20" height="18" rx="6" fill="#e85d3f"/>
+  <rect x="18" y="28" width="10" height="8" rx="4" fill="#ffd9b3"/>
+  <rect x="36" y="28" width="10" height="8" rx="4" fill="#ffd9b3"/>
+  <rect x="22" y="44" width="10" height="14" rx="4" fill="#204070"/>
+  <rect x="32" y="44" width="10" height="14" rx="4" fill="#204070"/>
+  <rect x="20" y="56" width="14" height="4" rx="2" fill="#101820"/>
+  <rect x="30" y="56" width="14" height="4" rx="2" fill="#101820"/>
+  <circle cx="28" cy="17" r="1.5" fill="#101820"/>
+  <circle cx="36" cy="17" r="1.5" fill="#101820"/>
+  <path d="M27 22c2 2 8 2 10 0" fill="none" stroke="#101820" stroke-width="2" stroke-linecap="round"/>
+</svg>
