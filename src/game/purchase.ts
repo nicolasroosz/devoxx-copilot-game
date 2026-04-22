@@ -59,3 +59,13 @@ export function getMostExpensiveOwnedItem(category: Category, runState: GameRunS
   }
   return ownedItems.reduce((max, item) => (item.price > max.price ? item : max));
 }
+
+export function getCumulativeBonusForCategory(category: Category, runState: GameRunState): number {
+  const ownedItems = getOwnedItemsInCategory(category, runState);
+  return ownedItems.reduce((total, item) => total + item.boostStep, 0);
+}
+
+export function getTotalCumulativeBonus(runState: GameRunState): number {
+  const categories: Category[] = ['shoes', 'hat', 't-shirt', 'pants'];
+  return categories.reduce((total, category) => total + getCumulativeBonusForCategory(category, runState), 0);
+}

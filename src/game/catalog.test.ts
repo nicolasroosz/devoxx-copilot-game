@@ -76,9 +76,9 @@ describe('catalog', () => {
           expect(categoryItems[i].price).toBeGreaterThan(categoryItems[i - 1].price);
         }
 
-        // Verify exponential formula: price = 100 * (1.5 ^ index)
+        // Verify exponential formula: price = 100 * (2.5 ^ index)
         categoryItems.forEach((item, index) => {
-          const expectedPrice = Math.floor(100 * Math.pow(1.5, index));
+          const expectedPrice = Math.floor(100 * Math.pow(2.5, index));
           expect(item.price).toBe(expectedPrice);
         });
       });
@@ -142,16 +142,35 @@ describe('catalog', () => {
   });
 
   describe('item naming', () => {
-    it('should have correctly formatted item names', () => {
+    it('should have correctly formatted item names based on thematic themes', () => {
+      const catalog = getCatalog();
+      const categories: Category[] = ['shoes', 'hat', 't-shirt', 'pants'];
+
+      const nameThemes: Record<Category, string[]> = {
+        'shoes': ['Nike', 'Adidas', 'Puma', 'Reebok', 'Asics', 'New Balance', 'Converse', 'Vans', 'Saucony', 'Brooks'],
+        'hat': ['Classic', 'Snapback', 'Beanie', 'Fedora', 'Bucket', 'Trucker', 'Baseball', 'Beret', 'Visor', 'Newsboy'],
+        't-shirt': ['Red', 'Blue', 'Green', 'Yellow', 'Purple', 'Orange', 'Pink', 'Black', 'White', 'Gray'],
+        'pants': ['Denim', 'Chino', 'Cargo', 'Linen', 'Cotton', 'Wool', 'Khaki', 'Twill', 'Corduroy', 'Silk']
+      };
+
+      categories.forEach((category) => {
+        const items = getCategoryItems(category);
+        const themes = nameThemes[category];
+        items.forEach((item, index) => {
+          expect(item.name).toBe(themes[index]);
+        });
+      });
+    });
+
+    it('should have boostStep values following Fibonacci sequence', () => {
       const catalog = getCatalog();
       const categories: Category[] = ['shoes', 'hat', 't-shirt', 'pants'];
 
       categories.forEach((category) => {
         const items = getCategoryItems(category);
+        const expectedFibonacci = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55];
         items.forEach((item, index) => {
-          const expectedCategoryLabel =
-            category.charAt(0).toUpperCase() + category.slice(1);
-          expect(item.name).toBe(`Item ${index + 1} ${expectedCategoryLabel}`);
+          expect(item.boostStep).toBe(expectedFibonacci[index]);
         });
       });
     });

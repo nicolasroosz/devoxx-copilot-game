@@ -52,7 +52,7 @@ describe('shopIntegration', () => {
 
     it('after buying the most expensive shoes item, getAvailableItems has one fewer item', () => {
       const state = createFreshRunState(512, 48);
-      state.stepCount = 10000;
+      state.stepCount = 1000000; // Need high steps due to exponential 2.5 base
       const category = 'shoes';
 
       const allItems = getCategoryItems(category);
@@ -73,7 +73,7 @@ describe('shopIntegration', () => {
 
     it('after buying, getOwnedItemsInCategory includes the new item', () => {
       const state = createFreshRunState(512, 48);
-      state.stepCount = 500;
+      state.stepCount = 50000; // Need higher steps due to exponential 2.5 base
       const category = 'hat';
 
       const items = getCategoryItems(category);
@@ -212,27 +212,27 @@ describe('shopIntegration', () => {
       expect(state.stepCount).toBe(1000);
     });
 
-    it('buy and deduct: 1000 steps, buy item for 506, then another for 225, verify final is 269', () => {
+    it('buy and deduct: 1000 steps, buy item for 250, then another for 625, verify final is 125', () => {
       let state = createFreshRunState(512, 48);
       state.stepCount = 1000;
 
       const shoes = getCategoryItems('shoes');
-      const item506 = shoes.find((i) => i.price === 506); // shoes-4
-      expect(item506).toBeDefined();
+      const item250 = shoes.find((i) => i.price === 250); // shoes-1
+      expect(item250).toBeDefined();
 
-      let result = purchaseItem(state, item506!);
+      let result = purchaseItem(state, item250!);
       expect(result.success).toBe(true);
       state = result.newRunState!;
-      expect(state.stepCount).toBe(1000 - 506); // 494
+      expect(state.stepCount).toBe(1000 - 250); // 750
 
       const hats = getCategoryItems('hat');
-      const item225 = hats.find((i) => i.price === 225); // hat-2
-      expect(item225).toBeDefined();
+      const item625 = hats.find((i) => i.price === 625); // hat-2
+      expect(item625).toBeDefined();
 
-      result = purchaseItem(state, item225!);
+      result = purchaseItem(state, item625!);
       expect(result.success).toBe(true);
       state = result.newRunState!;
-      expect(state.stepCount).toBe(494 - 225); // 269
+      expect(state.stepCount).toBe(750 - 625); // 125
     });
   });
 
@@ -265,7 +265,7 @@ describe('shopIntegration', () => {
 
     it('multiple items in one category: buy 3 shoes items, getMostExpensiveOwnedItem returns the priciest one', () => {
       let state = createFreshRunState(512, 48);
-      state.stepCount = 100000;
+      state.stepCount = 1000000; // Need even higher steps for 2.5 exponential
 
       const items = getCategoryItems('shoes');
       const item1 = items[2];
@@ -273,12 +273,15 @@ describe('shopIntegration', () => {
       const item3 = items[8];
 
       let result = purchaseItem(state, item1);
+      expect(result.success).toBe(true);
       state = result.newRunState!;
 
       result = purchaseItem(state, item2);
+      expect(result.success).toBe(true);
       state = result.newRunState!;
 
       result = purchaseItem(state, item3);
+      expect(result.success).toBe(true);
       state = result.newRunState!;
 
       const mostExpensive = getMostExpensiveOwnedItem('shoes', state);

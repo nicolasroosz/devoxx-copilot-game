@@ -229,7 +229,7 @@ describe('ShopMenu item display with scrolling', () => {
 
   it('should indicate purchase status correctly for each item', () => {
     const runState = createFreshRunState(512, 48);
-    const withSteps = { ...runState, stepCount: 10000 };
+    const withSteps = { ...runState, stepCount: 1000000 }; // Need high amount for exponential 2.5 base
     
     const items = getAvailableItems('shoes', withSteps);
     expect(items.length).toBeGreaterThan(0);

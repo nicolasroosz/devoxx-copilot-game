@@ -2,6 +2,7 @@ import { EventBus } from '../EventBus';
 import { GameObjects, Scene } from 'phaser';
 import { GameRunState, SavedGameState, hydrateRunState } from '../gameState';
 import { PlayerMovementInput, resolvePlayerMotion } from '../playerMovement';
+import { getTotalCumulativeBonus } from '../purchase';
 
 const WORLD_WIDTH = 4096;
 const WORLD_HEIGHT = 768;
@@ -146,7 +147,10 @@ export class Game extends Scene
 
         if (currentStepIndex !== this.lastStepIndex)
         {
-            this.stepCount += Math.abs(currentStepIndex - this.lastStepIndex);
+            const runState = this.getRunState();
+            const cumulativeBonus = getTotalCumulativeBonus(runState);
+            const stepsEarned = Math.abs(currentStepIndex - this.lastStepIndex) + cumulativeBonus;
+            this.stepCount += stepsEarned;
             this.lastStepIndex = currentStepIndex;
             this.stepCounterText.setText(`Steps: ${this.stepCount}`);
         }

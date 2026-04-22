@@ -3,7 +3,7 @@ import { GameObjects, Scene } from 'phaser';
 import { EventBus } from '../EventBus';
 import { GameRunState } from '../gameState';
 import { Category } from '../catalog';
-import { getMostExpensiveOwnedItem } from '../purchase';
+import { getMostExpensiveOwnedItem, getCumulativeBonusForCategory, getOwnedItemsInCategory } from '../purchase';
 import { ScrollableMenuContent, MenuLayoutConfig } from '../menuLayout';
 
 interface InventoryMenuData
@@ -17,6 +17,8 @@ interface InventorySlot
     itemName: string;
     itemPrice: number | null;
     isOwned: boolean;
+    cumulativeBonus: number;
+    ownedCount: number;
 }
 
 const CATEGORIES: Category[] = ['shoes', 'hat', 't-shirt', 'pants'];
@@ -98,12 +100,16 @@ export class InventoryMenu extends Scene
     {
         this.slots = CATEGORIES.map((category) => {
             const ownedItem = getMostExpensiveOwnedItem(category, this.currentRunState);
+            const cumulativeBonus = getCumulativeBonusForCategory(category, this.currentRunState);
+            const ownedCount = getOwnedItemsInCategory(category, this.currentRunState).length;
 
             return {
                 category,
                 itemName: ownedItem?.name ?? 'Empty',
                 itemPrice: ownedItem?.price ?? null,
-                isOwned: ownedItem !== null
+                isOwned: ownedItem !== null,
+                cumulativeBonus,
+                ownedCount
             };
         });
     }
@@ -140,18 +146,25 @@ export class InventoryMenu extends Scene
             }).setOrigin(0.5);
 
             const priceText = slot.itemPrice !== null
-                ? this.add.text(x, y + 25, `${slot.itemPrice} steps`, {
+                ? this.add.text(x, y + 15, `${slot.itemPrice} steps`, {
                     fontFamily: 'Arial',
-                    fontSize: 12,
+                    fontSize: 10,
                     color: '#d4e8ff',
                     align: 'center'
                 }).setOrigin(0.5)
-                : this.add.text(x, y + 25, '', {
+                : this.add.text(x, y + 15, '', {
                     fontFamily: 'Arial',
-                    fontSize: 12,
+                    fontSize: 10,
                     color: '#d4e8ff',
                     align: 'center'
                 }).setOrigin(0.5);
+
+            const bonusText = this.add.text(x, y + 30, `+${slot.cumulativeBonus} (${slot.ownedCount})`, {
+                fontFamily: 'Arial',
+                fontSize: 10,
+                color: '#90ee90',
+                align: 'center'
+            }).setOrigin(0.5);
 
             if (index === this.selectedIndex)
             {
@@ -160,7 +173,7 @@ export class InventoryMenu extends Scene
                 this.add.rectangle(x, y, 160, 80).setStrokeStyle(3, 0xffff00, 1);
             }
 
-            this.slotTexts.push(categoryText, itemText, priceText);
+            this.slotTexts.push(categoryText, itemText, priceText, bonusText);
         });
     }
 
