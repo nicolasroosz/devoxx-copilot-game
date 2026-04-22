@@ -22,6 +22,7 @@ const sampleState: SavedGameState = {
     playerX: 640,
     stepCount: 11,
     lastStepIndex: 13,
+    ownedItemIds: [],
     savedAt: '2026-04-22T12:00:00.000Z'
 };
 
@@ -58,6 +59,40 @@ describe('saveSlots', () =>
             stepCount: 20
         });
         expect(loadSaveSlot(1, storage)).toBeNull();
+    });
+
+    it('saves and loads a state with owned items', () =>
+    {
+        const storage = new MemoryStorage();
+        const stateWithItems: SavedGameState = {
+            ...sampleState,
+            ownedItemIds: ['article-1', 'article-5']
+        };
+
+        saveToSlot(1, stateWithItems, storage);
+
+        const loaded = loadSaveSlot(1, storage);
+        expect(loaded?.ownedItemIds).toEqual(['article-1', 'article-5']);
+    });
+
+    it('backward compatibility: old saves without ownedItemIds load as []', () =>
+    {
+        const storage = new MemoryStorage();
+        const oldSaveData = {
+            '1': {
+                playerX: 640,
+                stepCount: 11,
+                lastStepIndex: 13,
+                savedAt: '2026-04-22T12:00:00.000Z'
+            },
+            '2': null,
+            '3': null
+        };
+
+        storage.setItem('devoxx-copilot-game.save-slots', JSON.stringify(oldSaveData));
+
+        const loaded = loadSaveSlot(1, storage);
+        expect(loaded?.ownedItemIds).toEqual([]);
     });
 
     it('builds load and save summaries with the expected empty-slot behavior', () =>
@@ -97,5 +132,20 @@ describe('saveSlots', () =>
             disabled: false,
             state: null
         });
+    });
+
+    it('save slot summaries display text remains unchanged regardless of owned items', () =>
+    {
+        const storage = new MemoryStorage();
+        const stateWithItems: SavedGameState = {
+            ...sampleState,
+            ownedItemIds: ['article-1', 'article-2', 'article-3', 'article-4', 'article-5']
+        };
+
+        saveToSlot(1, stateWithItems, storage);
+
+        const summaries = getSaveSlotSummaries('load', storage);
+        expect(summaries[0].title).toBe('Slot 1 - 11 steps');
+        expect(summaries[0].detail).toBe('X 640 | 2026-04-22T12:00:00.000Z');
     });
 });

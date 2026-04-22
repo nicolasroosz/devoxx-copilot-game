@@ -3,6 +3,7 @@ export interface GameRunState
     playerX: number;
     stepCount: number;
     lastStepIndex: number;
+    ownedItemIds: string[];
 }
 
 export interface SavedGameState extends GameRunState
@@ -28,7 +29,8 @@ export function createFreshRunState(defaultPlayerX: number, stepDistance: number
     return {
         playerX: defaultPlayerX,
         stepCount: 0,
-        lastStepIndex: Math.floor(defaultPlayerX / stepDistance)
+        lastStepIndex: Math.floor(defaultPlayerX / stepDistance),
+        ownedItemIds: []
     };
 }
 
@@ -45,10 +47,13 @@ export function hydrateRunState(snapshot: SavedGameState | null | undefined, bou
         ? Math.floor(snapshot.lastStepIndex)
         : Math.floor(playerX / bounds.stepDistance);
 
+    const ownedItemIds = Array.isArray(snapshot.ownedItemIds) ? snapshot.ownedItemIds : [];
+
     return {
         playerX,
         stepCount,
-        lastStepIndex
+        lastStepIndex,
+        ownedItemIds
     };
 }
 
@@ -58,6 +63,15 @@ export function createSavedGameState(runState: GameRunState, savedAt: string): S
         playerX: runState.playerX,
         stepCount: runState.stepCount,
         lastStepIndex: runState.lastStepIndex,
+        ownedItemIds: runState.ownedItemIds,
         savedAt
+    };
+}
+
+export function addOwnedItem(runState: GameRunState, itemId: string): GameRunState
+{
+    return {
+        ...runState,
+        ownedItemIds: [...runState.ownedItemIds, itemId]
     };
 }

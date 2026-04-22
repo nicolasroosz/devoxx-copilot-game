@@ -29,7 +29,8 @@ export class PauseMenu extends Scene
         this.currentRunState = {
             playerX: 0,
             stepCount: 0,
-            lastStepIndex: 0
+            lastStepIndex: 0,
+            ownedItemIds: []
         };
     }
 

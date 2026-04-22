@@ -42,6 +42,7 @@ function cloneSavedGameState(state: SavedGameState): SavedGameState
         playerX: state.playerX,
         stepCount: state.stepCount,
         lastStepIndex: state.lastStepIndex,
+        ownedItemIds: state.ownedItemIds,
         savedAt: state.savedAt
     };
 }
@@ -58,7 +59,8 @@ function isSavedGameState(value: unknown): value is SavedGameState
     return Number.isFinite(candidate.playerX)
         && Number.isFinite(candidate.stepCount)
         && Number.isFinite(candidate.lastStepIndex)
-        && typeof candidate.savedAt === 'string';
+        && typeof candidate.savedAt === 'string'
+        && (candidate.ownedItemIds === undefined || Array.isArray(candidate.ownedItemIds));
 }
 
 function getBrowserStorage(): StorageLike | null
@@ -86,7 +88,12 @@ function normalizeSaveSlotMap(value: unknown): SaveSlotMap
 
         if (isSavedGameState(slotValue))
         {
-            slots[slotId] = cloneSavedGameState(slotValue);
+            const cloned = cloneSavedGameState(slotValue);
+            if (!cloned.ownedItemIds)
+            {
+                cloned.ownedItemIds = [];
+            }
+            slots[slotId] = cloned;
         }
     }
 

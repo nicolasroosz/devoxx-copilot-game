@@ -32,7 +32,10 @@ export class Game extends Scene
     playerSpeed: number;
     stepCount: number;
     lastStepIndex: number;
+    ownedItemIds: string[];
     saveState: SavedGameState | null;
+    shopActive: boolean;
+    inventoryActive: boolean;
 
     constructor ()
     {
@@ -40,7 +43,10 @@ export class Game extends Scene
         this.playerSpeed = PLAYER_SPEED;
         this.stepCount = 0;
         this.lastStepIndex = 0;
+        this.ownedItemIds = [];
         this.saveState = null;
+        this.shopActive = false;
+        this.inventoryActive = false;
     }
 
     init (data: GameSceneData)
@@ -83,6 +89,7 @@ export class Game extends Scene
 
         this.stepCount = runState.stepCount;
         this.lastStepIndex = runState.lastStepIndex;
+        this.ownedItemIds = runState.ownedItemIds;
 
         this.stepCounterText = this.add.text(this.scale.width - 24, 24, `Steps: ${this.stepCount}`, {
             fontFamily: 'Arial Black',
@@ -92,7 +99,7 @@ export class Game extends Scene
             strokeThickness: 6
         }).setOrigin(1, 0).setScrollFactor(0).setDepth(1000);
 
-        this.helperText = this.add.text(24, 24, 'Left/Right: move\nEsc: pause', {
+        this.helperText = this.add.text(24, 24, 'Left/Right: move\nS: shop | I: inventory | Esc: pause', {
             fontFamily: 'Arial',
             fontSize: 22,
             color: '#d7e7ff',
@@ -103,12 +110,19 @@ export class Game extends Scene
         this.cursors = this.input.keyboard?.createCursorKeys();
         this.camera.startFollow(this.player, true, 0.08, 0.08);
         this.input.keyboard?.on('keydown-ESC', () => this.openPauseMenu());
+        this.input.keyboard?.on('keydown-S', () => this.openShop());
+        this.input.keyboard?.on('keydown-I', () => this.openInventory());
 
         EventBus.emit('current-scene-ready', this);
     }
 
     update (_time: number, delta: number)
     {
+        if (this.shopActive || this.inventoryActive)
+        {
+            return;
+        }
+
         const movementInput: PlayerMovementInput = {
             leftPressed: this.cursors?.left?.isDown ?? false,
             rightPressed: this.cursors?.right?.isDown ?? false,
@@ -139,8 +153,16 @@ export class Game extends Scene
         return {
             playerX: this.player.x,
             stepCount: this.stepCount,
-            lastStepIndex: this.lastStepIndex
+            lastStepIndex: this.lastStepIndex,
+            ownedItemIds: this.ownedItemIds
         };
+    }
+
+    updateRunState (newRunState: GameRunState): void
+    {
+        this.stepCount = newRunState.stepCount;
+        this.ownedItemIds = newRunState.ownedItemIds;
+        this.stepCounterText.setText(`Steps: ${this.stepCount}`);
     }
 
     openPauseMenu ()
@@ -152,6 +174,38 @@ export class Game extends Scene
 
         this.scene.launch('PauseMenu', { runState: this.getRunState() });
         this.scene.pause();
+    }
+
+    openShop ()
+    {
+        if (this.scene.isActive('ShopMenu') || this.scene.isPaused())
+        {
+            return;
+        }
+
+        this.shopActive = true;
+        this.scene.launch('ShopMenu', { runState: this.getRunState() });
+    }
+
+    closeShop ()
+    {
+        this.shopActive = false;
+    }
+
+    openInventory ()
+    {
+        if (this.scene.isActive('InventoryMenu') || this.scene.isPaused())
+        {
+            return;
+        }
+
+        this.inventoryActive = true;
+        this.scene.launch('InventoryMenu', { runState: this.getRunState() });
+    }
+
+    closeInventory ()
+    {
+        this.inventoryActive = false;
     }
 
     changeScene ()
