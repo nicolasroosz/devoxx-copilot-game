@@ -1,25 +1,24 @@
 # Devoxx Copilot Game
 
-Devoxx Copilot Game is a Mario-like incremental game built with Phaser 4, React 19, TypeScript, and Vite. It starts from a side-scrolling movement prototype and is intended to grow into an incremental platformer where the player progresses by moving, collecting, and unlocking upgrades over time.
+## Brief Summary of the Game
 
-## Current Focus
+Devoxx Copilot Game is a Mario-like incremental game built with Phaser 4, React 19, TypeScript, and Vite. The current playable version focuses on side-scrolling movement, step-based progression, and menu-driven interactions that will evolve into a broader incremental platformer loop.
 
-- Side-scrolling Mario-like movement foundation
-- Phaser scenes wired into a React shell
-- Incremental game structure for future progression systems
-
-## Tech Stack
+## Stack of the Project
 
 - Phaser 4
 - React 19
 - TypeScript
 - Vite
+- Vitest
 
-## Requirements
+## How to Play and Main Actions of the Game
+
+### Requirements
 
 [Node.js](https://nodejs.org) is required to install dependencies and run scripts via `npm`.
 
-## Getting Started
+### Start the Game
 
 Install dependencies:
 
@@ -35,7 +34,15 @@ npm run dev
 
 The game runs at `http://localhost:8080` by default.
 
-## Available Commands
+### Main In-Game Actions
+
+- Use Left and Right arrow keys to move the player.
+- Gain step progress while moving across the world.
+- Press `S` to open the shop.
+- Press `I` to open the inventory.
+- Press `Esc` to open the pause menu.
+
+### Useful Commands
 
 | Command | Description |
 |---------|-------------|
@@ -46,7 +53,11 @@ The game runs at `http://localhost:8080` by default.
 | `npm run build-nolog` | Create a production build without sending anonymous build telemetry |
 | `npm run test` | Run the Vitest test suite |
 
-## Project Structure
+## Architecture of the Game
+
+The project uses React as the web application shell and Phaser as the real-time game runtime. React mounts the game container, while Phaser scenes handle gameplay state, rendering, input, and menu flows.
+
+### Key Structure
 
 | Path | Description |
 |------|-------------|
@@ -59,6 +70,29 @@ The game runs at `http://localhost:8080` by default.
 | `public/style.css` | Global page styling |
 | `public/assets/` | Static game assets |
 
-## Notes
+### Development Workflow
 
-The game is still in active development. The current codebase focuses on the playable movement foundation, and the incremental layer will build on top of that with progression, upgrades, and game loop systems.
+All code changes, features, and bug fixes follow a mandatory end-to-end workflow to ensure consistency, quality, and comprehensive documentation:
+
+1. **Read existing documentation and code** - Review README, affected code, instructions, and tests to understand the current state.
+2. **Compare against the request** - Identify gaps between the current state and what is requested. Ask clarifying questions if needed.
+3. **Plan the implementation** - Design the specific changes and present the plan for user approval.
+4. **Add or update tests** - Write tests that cover the new or changed behavior. Run `npm run test` to verify they pass.
+5. **Modify the code** - Implement changes following TypeScript and project conventions.
+6. **Update README and specification** - Ensure documentation reflects changes to scope, tech stack, commands, or behavior.
+7. **Validate the product** - Run `npm run test` and `npm run build` to ensure quality. Perform manual browser checks to verify real-world behavior.
+
+For details, see `.github/instructions/workflow.instructions.md`.
+
+## Brief Explanation of PhaserJS
+
+PhaserJS is the core game engine in this project. It manages scenes, rendering, input handling, camera behavior, and frame updates, allowing the game loop to run independently from the React UI shell.
+
+## Specification of the Game
+
+- Current scope: side-scrolling movement foundation with world bounds.
+- Current scope: step accumulation loop tied to player movement.
+- Current scope: menu-based interactions for pause, shop, and inventory.
+- Current scope: save-state-oriented progression model for run continuity.
+- Planned direction: expand the incremental progression layer with more upgrades, item effects, and longer-term progression.
+- Planned direction: strengthen the game loop with richer economy systems and additional gameplay milestones.
