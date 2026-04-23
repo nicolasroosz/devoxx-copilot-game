@@ -84,6 +84,27 @@ All code changes, features, and bug fixes follow a mandatory end-to-end workflow
 
 For details, see `.github/instructions/workflow.instructions.md`.
 
+### Copilot Configuration
+
+This project includes custom Copilot agents, instruction files, and skill documentation to guide AI-assisted development:
+
+- **Copilot Agents**: Custom agents for specialized development tasks
+  - `.github/agents/expert-react-frontend-engineer.agent.md` — React 19.2 expertise and modern hooks
+  - `.github/agents/copilot-configuration-expert.agent.md` — Copilot configuration design and best practices
+
+- **Instruction Files**: Domain-specific development guidelines
+  - `.github/instructions/workflow.instructions.md` — Mandatory 7-step development workflow
+  - `.github/instructions/typescript.instructions.md` — TypeScript and React component guidelines
+  - `.github/instructions/testing.instructions.md` — Testing requirements and coverage standards
+  - `.github/instructions/copilot-agent-authoring.instructions.md` — Custom agent authoring patterns
+  - `.github/instructions/copilot-instructions-best-practices.instructions.md` — Instruction file best practices
+  - `.github/instructions/copilot-skills-authoring.instructions.md` — Domain skill development
+
+- **Prompts and Templates**: `.github/prompts/` — Reusable prompt templates for common workflows
+- **Markdown Economy**: `.github/markdown-economy.md` — Context efficiency guidelines for documentation
+
+For comprehensive guidance on using Copilot in this project, see `.github/copilot.md`.
+
 ## Brief Explanation of PhaserJS
 
 PhaserJS is the core game engine in this project. It manages scenes, rendering, input handling, camera behavior, and frame updates, allowing the game loop to run independently from the React UI shell.
