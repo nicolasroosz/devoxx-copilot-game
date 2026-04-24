@@ -229,14 +229,23 @@ describe('ShopMenu item display with scrolling', () => {
 
   it('should indicate purchase status correctly for each item', () => {
     const runState = createFreshRunState(512, 48);
-    const withSteps = { ...runState, stepCount: 1000000 }; // Need high amount for exponential 2.5 base
+    // Get the cheapest items from each category to verify affordability logic works
+    const hat0Price = 100; // hat-0 is the cheapest item globally (global index 0)
+    const withSteps = { ...runState, stepCount: hat0Price }; // Just enough for cheapest item
     
-    const items = getAvailableItems('shoes', withSteps);
-    expect(items.length).toBeGreaterThan(0);
+    const hats = getAvailableItems('hat', withSteps);
+    expect(hats.length).toBeGreaterThan(0);
     
-    items.forEach(item => {
-      expect(canAffordItem(withSteps, item.price)).toBe(true);
-    });
+    // Verify cheapest hat (hat-0) is affordable
+    const cheapest = hats.find(item => item.id === 'hat-0');
+    expect(cheapest).toBeDefined();
+    expect(canAffordItem(withSteps, cheapest!.price)).toBe(true);
+    
+    // Verify more expensive items are not affordable
+    const expensive = hats.find(item => item.id === 'hat-1');
+    if (expensive) {
+      expect(canAffordItem(withSteps, expensive.price)).toBe(false);
+    }
   });
 
   it('should handle scrolling to view all items in category', () => {

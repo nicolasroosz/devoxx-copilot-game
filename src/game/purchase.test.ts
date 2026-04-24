@@ -96,8 +96,9 @@ describe('purchase', () => {
       const state = createFreshRunState(512, 48);
       state.stepCount = 150;
 
-      const items = getCategoryItems('shoes');
-      const cheapItem = items[0]; // First item should be cheapest
+      // Use hat-0 which costs 100 (cheapest item in catalog)
+      const items = getCategoryItems('hat');
+      const cheapItem = items[0];
 
       const result = purchaseItem(state, cheapItem);
 
@@ -110,7 +111,8 @@ describe('purchase', () => {
       const state = createFreshRunState(512, 48);
       state.stepCount = 150;
 
-      const items = getCategoryItems('shoes');
+      // Use hat-0 which costs 100
+      const items = getCategoryItems('hat');
       const item = items[0];
 
       const result = purchaseItem(state, item);
@@ -122,7 +124,8 @@ describe('purchase', () => {
       const state = createFreshRunState(512, 48);
       state.stepCount = 150;
 
-      const items = getCategoryItems('shoes');
+      // Use hat-0 which costs 100
+      const items = getCategoryItems('hat');
       const item = items[0];
 
       const result = purchaseItem(state, item);

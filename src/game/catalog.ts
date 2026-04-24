@@ -9,8 +9,22 @@ export interface Item {
   boostStep: number;
 }
 
-const CATEGORIES: Category[] = ['shoes', 'hat', 't-shirt', 'pants'];
+const CATEGORIES_ORDERED: Category[] = ['hat', 't-shirt', 'shoes', 'pants'];
 const ITEMS_PER_CATEGORY = 10;
+
+const CATEGORY_BONUS_FACTORS: Record<Category, number> = {
+  hat: 1.0,
+  't-shirt': 1.1,
+  shoes: 1.2,
+  pants: 1.3,
+};
+
+const CATEGORY_PRICE_FACTORS: Record<Category, number> = {
+  hat: 1.0,
+  't-shirt': 1.2,
+  shoes: 1.4,
+  pants: 1.6,
+};
 
 const NAME_THEMES: Record<Category, string[]> = {
   'shoes': ['Nike', 'Adidas', 'Puma', 'Reebok', 'Asics', 'New Balance', 'Converse', 'Vans', 'Saucony', 'Brooks'],
@@ -20,43 +34,15 @@ const NAME_THEMES: Record<Category, string[]> = {
 };
 
 function getFibonacciBonus(index: number): number {
-  if (index === 0 || index === 1) return 1;
-  let a = 1, b = 1;
+  // Fibonacci sequence starting at 1, 2, 3, 5, 8...
+  // This is the traditional Fibonacci but shifted by one position
+  if (index === 0) return 1;
+  if (index === 1) return 2;
+  let a = 1, b = 2;
   for (let i = 2; i <= index; i++) {
     [a, b] = [b, a + b];
   }
   return b;
-}
-
-function generateItems(category: Category): Item[] {
-  const items: Item[] = [];
-  const themes = NAME_THEMES[category];
-  const usedNames = new Set<string>();
-
-  for (let i = 0; i < ITEMS_PER_CATEGORY; i++) {
-    const price = Math.floor(100 * Math.pow(2.5, i));
-    let name = themes[i];
-    
-    // Ensure uniqueness by appending variant number if needed
-    let uniqueName = name;
-    let variant = 1;
-    while (usedNames.has(uniqueName)) {
-      uniqueName = `${name} ${variant}`;
-      variant++;
-    }
-    usedNames.add(uniqueName);
-
-    items.push({
-      id: `${category}-${i}`,
-      name: uniqueName,
-      category,
-      price,
-      textureKey: `item-${category}-${i}`,
-      boostStep: getFibonacciBonus(i)
-    });
-  }
-
-  return items;
 }
 
 let cachedCatalog: Item[] | null = null;
@@ -67,8 +53,23 @@ export function getCatalog(): Item[] {
   }
 
   const catalog: Item[] = [];
-  for (const category of CATEGORIES) {
-    catalog.push(...generateItems(category));
+
+  // Generate items per category independently — no cross-category index
+  for (const category of CATEGORIES_ORDERED) {
+    for (let itemIndex = 0; itemIndex < ITEMS_PER_CATEGORY; itemIndex++) {
+      const price = Math.floor(100 * Math.pow(2.5, itemIndex) * CATEGORY_PRICE_FACTORS[category]);
+      const themes = NAME_THEMES[category];
+      const name = themes[itemIndex];
+
+      catalog.push({
+        id: `${category}-${itemIndex}`,
+        name,
+        category,
+        price,
+        textureKey: `item-${category}-${itemIndex}`,
+        boostStep: Math.round(getFibonacciBonus(itemIndex) * CATEGORY_BONUS_FACTORS[category])
+      });
+    }
   }
 
   cachedCatalog = catalog;

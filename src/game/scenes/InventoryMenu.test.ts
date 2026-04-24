@@ -31,7 +31,8 @@ describe('InventoryMenu', () => {
         const mostExpensive = getMostExpensiveOwnedItem('shoes', withShoe5);
 
         expect(mostExpensive?.id).toBe('shoes-5');
-        expect(mostExpensive?.price).toBe(9765); // 100 * 2.5^5
+        // shoes-5: floor(100 * 2.5^5 * 1.4) = floor(13671.875) = 13671
+        expect(mostExpensive?.price).toBe(13671);
     });
 });
 

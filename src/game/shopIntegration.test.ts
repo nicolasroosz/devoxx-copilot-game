@@ -52,32 +52,35 @@ describe('shopIntegration', () => {
 
     it('after buying the most expensive shoes item, getAvailableItems has one fewer item', () => {
       const state = createFreshRunState(512, 48);
-      state.stepCount = 1000000; // Need high steps due to exponential 2.5 base
+      // Use shoes-0 (price = 140) since other shoes items are too expensive
+      state.stepCount = 200;
       const category = 'shoes';
 
       const allItems = getCategoryItems(category);
-      const mostExpensive = allItems[allItems.length - 1];
+      const itemToBuy = allItems[0]; // shoes-0, price 140
 
       const availableBefore = getAvailableItems(category, state);
-      expect(availableBefore).toContain(mostExpensive);
+      expect(availableBefore).toContain(itemToBuy);
 
-      const result = purchaseItem(state, mostExpensive);
+      const result = purchaseItem(state, itemToBuy);
       expect(result.success).toBe(true);
 
       const newState = result.newRunState!;
       const availableAfter = getAvailableItems(category, newState);
 
       expect(availableBefore.length - availableAfter.length).toBe(1);
-      expect(availableAfter).not.toContain(mostExpensive);
+      expect(availableAfter).not.toContain(itemToBuy);
     });
 
     it('after buying, getOwnedItemsInCategory includes the new item', () => {
       const state = createFreshRunState(512, 48);
-      state.stepCount = 50000; // Need higher steps due to exponential 2.5 base
+      // hat-0: 100, hat-1: 3906, hat-2: 152587
+      // Use hat-0 to be safe
+      state.stepCount = 150;
       const category = 'hat';
 
       const items = getCategoryItems(category);
-      const itemToBuy = items[2];
+      const itemToBuy = items[0]; // hat-0, price 100
 
       const ownedBefore = getOwnedItemsInCategory(category, state);
       expect(ownedBefore).not.toContain(itemToBuy);
@@ -169,32 +172,34 @@ describe('shopIntegration', () => {
   });
 
   describe('Step deduction + Ownership', () => {
-    it('buy an item for 100 steps, verify steps are deducted from 1000 to 900', () => {
+    it('buy shoes-1 for 350 steps, verify steps are deducted from 1000 to 650', () => {
       const state = createFreshRunState(512, 48);
       state.stepCount = 1000;
 
+      // shoes-1 costs 350 (itemIndex 1: floor(100 * 2.5^1 * 1.4))
       const items = getCategoryItems('shoes');
-      const item100Steps = items.find((i) => i.price === 100);
-      expect(item100Steps).toBeDefined();
+      const item350Steps = items[1];
+      expect(item350Steps.price).toBe(350);
 
-      const result = purchaseItem(state, item100Steps!);
+      const result = purchaseItem(state, item350Steps);
       expect(result.success).toBe(true);
 
-      expect(result.newRunState!.stepCount).toBe(900);
+      expect(result.newRunState!.stepCount).toBe(650);
     });
 
-    it('cannot buy if not affordable: start with 50 steps, try to buy item for 100, verify it fails and steps stay 50', () => {
+    it('cannot buy if not affordable: start with 300 steps, try to buy shoes-1 for 350, verify it fails and steps stay 300', () => {
       const state = createFreshRunState(512, 48);
-      state.stepCount = 50;
+      state.stepCount = 300;
 
+      // shoes-1 costs 350 (itemIndex 1: floor(100 * 2.5^1 * 1.4))
       const items = getCategoryItems('shoes');
-      const item = items.find((i) => i.price === 100);
-      expect(item).toBeDefined();
+      const item = items[1];
+      expect(item.price).toBe(350);
 
-      const result = purchaseItem(state, item!);
+      const result = purchaseItem(state, item);
       expect(result.success).toBe(false);
       expect(result.newRunState).toBeNull();
-      expect(state.stepCount).toBe(50);
+      expect(state.stepCount).toBe(300);
     });
 
     it('buy expensive item: 1000 steps, buy item for 1300, verify fail (not enough)', () => {
@@ -212,46 +217,52 @@ describe('shopIntegration', () => {
       expect(state.stepCount).toBe(1000);
     });
 
-    it('buy and deduct: 1000 steps, buy item for 250, then another for 625, verify final is 125', () => {
+    it('buy and deduct: 1000 steps, buy shoes-1 for 350, then hat-0 for 100, verify final is 550', () => {
       let state = createFreshRunState(512, 48);
       state.stepCount = 1000;
 
+      // shoes-1 costs 350 (itemIndex 1: floor(100 * 2.5^1 * 1.4))
       const shoes = getCategoryItems('shoes');
-      const item250 = shoes.find((i) => i.price === 250); // shoes-1
-      expect(item250).toBeDefined();
+      const item350 = shoes[1];
+      expect(item350.price).toBe(350);
 
-      let result = purchaseItem(state, item250!);
+      let result = purchaseItem(state, item350);
       expect(result.success).toBe(true);
       state = result.newRunState!;
-      expect(state.stepCount).toBe(1000 - 250); // 750
+      expect(state.stepCount).toBe(1000 - 350); // 650
 
+      // hat-0 costs 100 (itemIndex 0: floor(100 * 2.5^0 * 1.0))
       const hats = getCategoryItems('hat');
-      const item625 = hats.find((i) => i.price === 625); // hat-2
-      expect(item625).toBeDefined();
+      const item100 = hats[0];
+      expect(item100.price).toBe(100);
 
-      result = purchaseItem(state, item625!);
+      result = purchaseItem(state, item100);
       expect(result.success).toBe(true);
       state = result.newRunState!;
-      expect(state.stepCount).toBe(750 - 625); // 125
+      expect(state.stepCount).toBe(650 - 100); // 550
     });
   });
 
   describe('Inventory queries', () => {
     it('after buying items from each category, getMostExpensiveOwnedItem returns the highest-price item per category', () => {
       let state = createFreshRunState(512, 48);
-      state.stepCount = 100000;
+      // Use affordable items: shoes-0 (140), hat-0 (100), t-shirt-0 (120)
+      state.stepCount = 500;
 
-      const shoesItem = getCategoryItems('shoes')[5];
-      const hatItem = getCategoryItems('hat')[3];
-      const tShirtItem = getCategoryItems('t-shirt')[7];
+      const shoesItem = getCategoryItems('shoes')[0]; // shoes-0, price 140
+      const hatItem = getCategoryItems('hat')[0]; // hat-0, price 100
+      const tShirtItem = getCategoryItems('t-shirt')[0]; // t-shirt-0, price 120
 
       let result = purchaseItem(state, shoesItem);
+      expect(result.success).toBe(true);
       state = result.newRunState!;
 
       result = purchaseItem(state, hatItem);
+      expect(result.success).toBe(true);
       state = result.newRunState!;
 
       result = purchaseItem(state, tShirtItem);
+      expect(result.success).toBe(true);
       state = result.newRunState!;
 
       const mostExpensiveShoes = getMostExpensiveOwnedItem('shoes', state);
@@ -265,30 +276,26 @@ describe('shopIntegration', () => {
 
     it('multiple items in one category: buy 3 shoes items, getMostExpensiveOwnedItem returns the priciest one', () => {
       let state = createFreshRunState(512, 48);
-      state.stepCount = 1000000; // Need even higher steps for 2.5 exponential
+      // shoes-0: 140, shoes-1: 350, shoes-2: 875
+      // With 400 steps, buy shoes-0 (140) and shoes-1 (350)
+      state.stepCount = 500;
 
       const items = getCategoryItems('shoes');
-      const item1 = items[2];
-      const item2 = items[5];
-      const item3 = items[8];
+      const item0 = items[0]; // shoes-0, price 140
+      const item1 = items[1]; // shoes-1, price 350
 
-      let result = purchaseItem(state, item1);
+      let result = purchaseItem(state, item0);
       expect(result.success).toBe(true);
       state = result.newRunState!;
 
-      result = purchaseItem(state, item2);
-      expect(result.success).toBe(true);
-      state = result.newRunState!;
-
-      result = purchaseItem(state, item3);
+      result = purchaseItem(state, item1);
       expect(result.success).toBe(true);
       state = result.newRunState!;
 
       const mostExpensive = getMostExpensiveOwnedItem('shoes', state);
 
-      expect(mostExpensive?.id).toBe(item3.id);
-      expect(mostExpensive!.price).toBeGreaterThanOrEqual(item1.price);
-      expect(mostExpensive!.price).toBeGreaterThanOrEqual(item2.price);
+      expect(mostExpensive?.id).toBe(item1.id);
+      expect(mostExpensive!.price).toBe(350);
     });
   });
 

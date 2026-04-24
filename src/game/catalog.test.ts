@@ -60,25 +60,26 @@ describe('catalog', () => {
     });
 
     it('should have exponentially increasing prices within each category', () => {
-      const catalog = getCatalog();
       const categories: Category[] = ['shoes', 'hat', 't-shirt', 'pants'];
 
-      categories.forEach((category) => {
-        const categoryItems = catalog
-          .filter((item) => item.category === category)
-          .sort((a, b) => {
-            const aIndex = parseInt(a.id.split('-')[1], 10);
-            const bIndex = parseInt(b.id.split('-')[1], 10);
-            return aIndex - bIndex;
-          });
+      const CATEGORY_PRICE_FACTORS: Record<Category, number> = {
+        hat: 1.0,
+        't-shirt': 1.2,
+        shoes: 1.4,
+        pants: 1.6,
+      };
 
-        for (let i = 1; i < categoryItems.length; i++) {
-          expect(categoryItems[i].price).toBeGreaterThan(categoryItems[i - 1].price);
+      categories.forEach((category) => {
+        const items = getCategoryItems(category);
+
+        // Prices must increase within a category
+        for (let i = 1; i < items.length; i++) {
+          expect(items[i].price).toBeGreaterThan(items[i - 1].price);
         }
 
-        // Verify exponential formula: price = 100 * (2.5 ^ index)
-        categoryItems.forEach((item, index) => {
-          const expectedPrice = Math.floor(100 * Math.pow(2.5, index));
+        // Verify per-category formula: price = floor(100 * 2.5^itemIndex * factor)
+        items.forEach((item, itemIndex) => {
+          const expectedPrice = Math.floor(100 * Math.pow(2.5, itemIndex) * CATEGORY_PRICE_FACTORS[category]);
           expect(item.price).toBe(expectedPrice);
         });
       });
@@ -162,15 +163,24 @@ describe('catalog', () => {
       });
     });
 
-    it('should have boostStep values following Fibonacci sequence', () => {
-      const catalog = getCatalog();
+    it('should have boostStep values following Fibonacci sequence scaled by category factor', () => {
       const categories: Category[] = ['shoes', 'hat', 't-shirt', 'pants'];
+
+      const CATEGORY_BONUS_FACTORS: Record<Category, number> = {
+        hat: 1.0,
+        't-shirt': 1.1,
+        shoes: 1.2,
+        pants: 1.3,
+      };
+
+      const baseFibonacci = [1, 2, 3, 5, 8, 13, 21, 34, 55, 89];
 
       categories.forEach((category) => {
         const items = getCategoryItems(category);
-        const expectedFibonacci = [1, 1, 2, 3, 5, 8, 13, 21, 34, 55];
+        const factor = CATEGORY_BONUS_FACTORS[category];
         items.forEach((item, index) => {
-          expect(item.boostStep).toBe(expectedFibonacci[index]);
+          const expectedBoost = Math.round(baseFibonacci[index] * factor);
+          expect(item.boostStep).toBe(expectedBoost);
         });
       });
     });
