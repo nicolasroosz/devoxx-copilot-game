@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
+import { calculateMenuLayout, MenuLayoutConfig } from '../menuLayout';
 
 describe('PauseMenu Scene', () => {
   // Testing state management logic without requiring Phaser environment
@@ -204,6 +205,36 @@ describe('PauseMenu Scene', () => {
 
       expect(playerX).toBe(0);
       expect(stepCount).toBe(0);
+    });
+  });
+
+  describe('Menu Layout', () => {
+    it('should position content below subtitle with headerHeight=180', () => {
+      const layoutConfig: MenuLayoutConfig = {
+        panelX: 512,
+        panelY: 134,
+        panelWidth: 720,
+        panelHeight: 500,
+        headerHeight: 180,
+        footerHeight: 80,
+        rowHeight: 78,
+      };
+
+      const metrics = calculateMenuLayout(layoutConfig);
+
+      // Content starts at panelY + headerHeight = 134 + 180 = 314
+      expect(metrics.contentAreaStartY).toBe(314);
+
+      // Content area (y=314) should be below subtitle (y=282)
+      expect(metrics.contentAreaStartY).toBeGreaterThan(282);
+
+      // Verify contentAreaHeight is correctly calculated
+      const expectedContentHeight = 500 - 180 - 80; // panelHeight - headerHeight - footerHeight
+      expect(metrics.contentAreaHeight).toBe(expectedContentHeight);
+
+      // Verify max visible rows
+      const expectedVisibleRows = Math.floor(expectedContentHeight / 78);
+      expect(metrics.maxVisibleRows).toBe(expectedVisibleRows);
     });
   });
 });

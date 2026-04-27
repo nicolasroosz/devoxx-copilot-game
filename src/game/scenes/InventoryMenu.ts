@@ -71,7 +71,7 @@ export class InventoryMenu extends Scene
             strokeThickness: 8
         }).setOrigin(0.5);
 
-        this.add.text(512, 550, 'Arrow keys to navigate, Escape to close', {
+        this.add.text(512, 550, 'Arrow keys to navigate, Escape or I to close', {
             fontFamily: 'Arial',
             fontSize: 14,
             color: '#d4e8ff',
@@ -231,5 +231,6 @@ export class InventoryMenu extends Scene
         this.input.keyboard?.on('keydown-LEFT', () => this.moveSelection('left'));
         this.input.keyboard?.on('keydown-RIGHT', () => this.moveSelection('right'));
         this.input.keyboard?.on('keydown-ESC', () => this.closeInventory());
+        this.input.keyboard?.on('keydown-I', () => this.closeInventory());
     }
 }

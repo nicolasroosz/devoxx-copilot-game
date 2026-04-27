@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import { SavedGameState } from './gameState';
-import { getSaveSlotSummaries, loadSaveSlot, loadSaveSlots, saveToSlot, StorageLike } from './saveSlots';
+import { deleteFromSlot, getSaveSlotSummaries, loadSaveSlot, loadSaveSlots, saveToSlot, StorageLike } from './saveSlots';
 
 class MemoryStorage implements StorageLike
 {
@@ -147,5 +147,69 @@ describe('saveSlots', () =>
         const summaries = getSaveSlotSummaries('load', storage);
         expect(summaries[0].title).toBe('Slot 1 - 11 steps');
         expect(summaries[0].detail).toBe('X 640 | 2026-04-22T12:00:00.000Z');
+    });
+
+    it('deleting an occupied slot clears it', () =>
+    {
+        const storage = new MemoryStorage();
+
+        saveToSlot(1, sampleState, storage);
+        expect(loadSaveSlot(1, storage)).toEqual(sampleState);
+
+        deleteFromSlot(1, storage);
+        expect(loadSaveSlot(1, storage)).toBeNull();
+    });
+
+    it('deleting a slot does not affect other slots', () =>
+    {
+        const storage = new MemoryStorage();
+
+        saveToSlot(1, sampleState, storage);
+        saveToSlot(2, {
+            ...sampleState,
+            playerX: 800,
+            stepCount: 15
+        }, storage);
+        saveToSlot(3, {
+            ...sampleState,
+            playerX: 1000,
+            stepCount: 25
+        }, storage);
+
+        deleteFromSlot(2, storage);
+
+        expect(loadSaveSlot(1, storage)).toEqual(sampleState);
+        expect(loadSaveSlot(2, storage)).toBeNull();
+        expect(loadSaveSlot(3, storage)).toEqual({
+            ...sampleState,
+            playerX: 1000,
+            stepCount: 25
+        });
+    });
+
+    it('deleting an empty slot is a no-op', () =>
+    {
+        const storage = new MemoryStorage();
+
+        saveToSlot(1, sampleState, storage);
+
+        deleteFromSlot(2, storage);
+
+        expect(loadSaveSlot(1, storage)).toEqual(sampleState);
+        expect(loadSaveSlot(2, storage)).toBeNull();
+        expect(loadSaveSlot(3, storage)).toBeNull();
+    });
+
+    it('delete persists to storage', () =>
+    {
+        const storage = new MemoryStorage();
+
+        saveToSlot(1, sampleState, storage);
+        deleteFromSlot(1, storage);
+
+        const slots = loadSaveSlots(storage);
+        expect(slots[1]).toBeNull();
+        expect(slots[2]).toBeNull();
+        expect(slots[3]).toBeNull();
     });
 });

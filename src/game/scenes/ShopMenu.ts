@@ -72,7 +72,7 @@ export class ShopMenu extends Scene {
       strokeThickness: 8
     }).setOrigin(0.5);
 
-    this.footerText = this.add.text(512, 700, 'Left/Right: tabs | Up/Down: browse | Enter: buy | Esc: close', {
+    this.footerText = this.add.text(512, 700, 'Left/Right: tabs | Up/Down: browse | Enter: buy | S/Esc: close', {
       fontFamily: 'Arial',
       fontSize: 14,
       color: '#a0d0d8',
@@ -293,6 +293,7 @@ export class ShopMenu extends Scene {
     this.input.keyboard?.on('keydown-UP', () => this.moveItem('up'));
     this.input.keyboard?.on('keydown-DOWN', () => this.moveItem('down'));
     this.input.keyboard?.on('keydown-ENTER', () => this.attemptPurchase());
+    this.input.keyboard?.on('keydown-S', () => this.closeShop());
     this.input.keyboard?.on('keydown-ESC', () => this.closeShop());
   }
 }

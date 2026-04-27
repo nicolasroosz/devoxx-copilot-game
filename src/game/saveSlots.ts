@@ -141,6 +141,16 @@ export function saveToSlot(slotId: SaveSlotId, state: SavedGameState, storage: S
     return slots;
 }
 
+export function deleteFromSlot(slotId: SaveSlotId, storage: StorageLike | null = getBrowserStorage()): SaveSlotMap
+{
+    const slots = loadSaveSlots(storage);
+
+    slots[slotId] = null;
+    writeSaveSlotMap(slots, storage);
+
+    return slots;
+}
+
 export function getSaveSlotSummaries(mode: 'load' | 'save', storage: StorageLike | null = getBrowserStorage()): SaveSlotSummary[]
 {
     const slots = loadSaveSlots(storage);

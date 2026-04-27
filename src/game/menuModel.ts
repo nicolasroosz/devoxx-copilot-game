@@ -1,6 +1,6 @@
 import { SaveSlotId, SaveSlotSummary } from './saveSlots';
 
-export type MenuAction = 'start-new' | 'open-load' | 'load-slot' | 'return-home' | 'resume' | 'open-save' | 'save-slot' | 'exit-run' | 'return-pause';
+export type MenuAction = 'start-new' | 'open-load' | 'load-slot' | 'return-home' | 'resume' | 'open-save' | 'save-slot' | 'exit-run' | 'return-pause' | 'delete-slot' | 'cancel-delete';
 
 export interface MenuOption
 {
@@ -10,6 +10,7 @@ export interface MenuOption
     action: MenuAction;
     slotId?: SaveSlotId;
     disabled?: boolean;
+    deletable?: boolean;
 }
 
 export function createHomeMenuOptions(): MenuOption[]
@@ -39,7 +40,8 @@ export function createLoadMenuOptions(summaries: SaveSlotSummary[]): MenuOption[
             detail: summary.detail,
             action: 'load-slot' as const,
             slotId: summary.id,
-            disabled: summary.disabled
+            disabled: summary.disabled,
+            deletable: summary.state !== null
         })),
         {
             id: 'return-home',
@@ -89,6 +91,25 @@ export function createSaveMenuOptions(summaries: SaveSlotSummary[]): MenuOption[
             label: 'Return',
             detail: 'Back to the pause menu',
             action: 'return-pause'
+        }
+    ];
+}
+
+export function createDeleteConfirmOptions(slotSummary: SaveSlotSummary): MenuOption[]
+{
+    return [
+        {
+            id: 'confirm-delete',
+            label: 'Confirm Delete',
+            detail: 'This action cannot be undone. The save will be permanently deleted.',
+            action: 'delete-slot',
+            slotId: slotSummary.id
+        },
+        {
+            id: 'cancel-delete',
+            label: 'Cancel',
+            detail: 'Return to the load menu without deleting',
+            action: 'cancel-delete'
         }
     ];
 }

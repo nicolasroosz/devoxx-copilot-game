@@ -2,9 +2,9 @@ import { GameObjects, Scene } from 'phaser';
 
 import { EventBus } from '../EventBus';
 import { SavedGameState } from '../gameState';
-import { MenuOption, createHomeMenuOptions, createLoadMenuOptions, formatMenuOptionText } from '../menuModel';
+import { MenuOption, createHomeMenuOptions, createLoadMenuOptions, createDeleteConfirmOptions, formatMenuOptionText } from '../menuModel';
 import { getInitialSelectionIndex, moveSelection } from '../menuSelection';
-import { getSaveSlotSummaries, loadSaveSlot } from '../saveSlots';
+import { getSaveSlotSummaries, loadSaveSlot, deleteFromSlot, SaveSlotId } from '../saveSlots';
 import { ScrollableMenuContent, MenuLayoutConfig } from '../menuLayout';
 
 export class MainMenu extends Scene
@@ -14,9 +14,10 @@ export class MainMenu extends Scene
     title: GameObjects.Text;
     subtitle: GameObjects.Text;
     optionTexts: GameObjects.Text[];
-    currentView: 'home' | 'load';
+    currentView: 'home' | 'load' | 'confirm-delete';
     selectedIndex: number;
     scrollableContent: ScrollableMenuContent;
+    deleteTargetSlotId: SaveSlotId | null;
 
     constructor ()
     {
@@ -25,12 +26,14 @@ export class MainMenu extends Scene
         this.currentView = 'home';
         this.selectedIndex = 0;
         this.scrollableContent = null!;
+        this.deleteTargetSlotId = null;
     }
 
     init ()
     {
         this.currentView = 'home';
         this.selectedIndex = 0;
+        this.deleteTargetSlotId = null;
     }
 
     create ()
@@ -73,6 +76,11 @@ export class MainMenu extends Scene
 
     getCurrentOptions (): MenuOption[]
     {
+        if (this.currentView === 'confirm-delete' && this.deleteTargetSlotId !== null)
+        {
+            return createDeleteConfirmOptions(getSaveSlotSummaries('load')[this.deleteTargetSlotId - 1]);
+        }
+
         if (this.currentView === 'load')
         {
             return createLoadMenuOptions(getSaveSlotSummaries('load'));
@@ -87,14 +95,34 @@ export class MainMenu extends Scene
 
         this.selectedIndex = getInitialSelectionIndex(options, preferredIndex);
 
+        // Update subtitle based on current view
+        let subtitleText = 'Arrow keys to navigate, Enter to confirm, Escape to go back';
+        if (this.currentView === 'load')
+        {
+            subtitleText = 'Arrow keys to navigate, Enter to confirm, D to delete, Escape to go back';
+        }
+        else if (this.currentView === 'confirm-delete')
+        {
+            subtitleText = 'This will be permanently deleted. Press Enter to confirm or Escape to cancel';
+        }
+        this.subtitle.setText(subtitleText);
+
         for (const optionText of this.optionTexts)
         {
             optionText.destroy();
         }
 
         this.optionTexts = options.map((option, index) => {
+            let displayText = formatMenuOptionText(option);
+            
+            // Add trash icon for deletable slots in load view
+            if (this.currentView === 'load' && option.deletable === true)
+            {
+                displayText = '🗑 ' + displayText;
+            }
+
             const yPos = this.scrollableContent.getVisibleYPosition(index);
-            const optionText = this.add.text(512, yPos, formatMenuOptionText(option), {
+            const optionText = this.add.text(512, yPos, displayText, {
                 fontFamily: 'Arial',
                 fontSize: 26,
                 color: '#f8fbff',
@@ -184,6 +212,23 @@ export class MainMenu extends Scene
             return;
         }
 
+        if (selectedOption.action === 'delete-slot' && selectedOption.slotId)
+        {
+            deleteFromSlot(selectedOption.slotId);
+            this.deleteTargetSlotId = null;
+            this.currentView = 'load';
+            this.refreshMenu();
+            return;
+        }
+
+        if (selectedOption.action === 'cancel-delete')
+        {
+            this.deleteTargetSlotId = null;
+            this.currentView = 'load';
+            this.refreshMenu();
+            return;
+        }
+
         if (selectedOption.action === 'load-slot' && selectedOption.slotId)
         {
             const saveState = loadSaveSlot(selectedOption.slotId);
@@ -197,9 +242,40 @@ export class MainMenu extends Scene
 
     handleBack ()
     {
+        if (this.currentView === 'confirm-delete')
+        {
+            this.deleteTargetSlotId = null;
+            this.currentView = 'load';
+            this.refreshMenu();
+            return;
+        }
+
         if (this.currentView === 'load')
         {
             this.currentView = 'home';
+            this.refreshMenu();
+        }
+    }
+
+    private handleDelete ()
+    {
+        if (this.currentView !== 'load')
+        {
+            return;
+        }
+
+        const options = this.getCurrentOptions();
+        const selectedOption = options[this.selectedIndex];
+
+        if (!selectedOption || !selectedOption.deletable)
+        {
+            return;
+        }
+
+        if (selectedOption.slotId)
+        {
+            this.deleteTargetSlotId = selectedOption.slotId;
+            this.currentView = 'confirm-delete';
             this.refreshMenu();
         }
     }
@@ -212,5 +288,6 @@ export class MainMenu extends Scene
         this.input.keyboard?.on('keydown-RIGHT', () => this.moveSelection('next'));
         this.input.keyboard?.on('keydown-ENTER', () => this.handleConfirm());
         this.input.keyboard?.on('keydown-ESC', () => this.handleBack());
+        this.input.keyboard?.on('keydown-D', () => this.handleDelete());
     }
 }

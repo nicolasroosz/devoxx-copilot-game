@@ -69,7 +69,7 @@ export class PauseMenu extends Scene
             panelY: 134,
             panelWidth: 720,
             panelHeight: 500,
-            headerHeight: 100,
+            headerHeight: 180,
             footerHeight: 80,
             rowHeight: 78
         };
